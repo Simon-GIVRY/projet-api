@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\UserRepository;
@@ -19,12 +20,14 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use ApiPlatform\Serializer\Filter\PropertyFilter;
+use Symfony\Component\Validator\Constraints\Email;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ApiResource(
     operations: [
-        new Get(normalizationContext:[]),
+        new Get(),
         new GetCollection(),
         new Post(),
         new Put(),
@@ -33,7 +36,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
     normalizationContext:[ "groups" => ["User:read"]],
     denormalizationContext:[ "groups" => ["User:write"]]
 )]
-#[ApiFilter(SearchFilter::class, properties:["titles" => "partial", "description" => "partial"])]
+
+#[ApiFilter(SearchFilter::class, properties:["username" => "partial", "email" => "partial"])]
+#[ApiFilter(PropertyFilter::class)]
 #[UniqueEntity(fields:['username'])]
 
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -42,6 +47,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
 
     #[ORM\Column(length: 180, unique: true)]
     #[Groups(["User:read", "User:write", "Post:read", "Post:write"])]
@@ -62,10 +68,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["User:read", "User:write", "Post:read", "Post:write"])]
     #[ORM\Column(length: 255)]
     #[NotBlank()]
+    #[Email( message: 'The email {{ value }} is not a valid email.')]
     private ?string $email = null;
 
-    #[Groups(["User:read", "Post:read"])]
-    #[ORM\OneToMany(mappedBy: 'postOwner', targetEntity: Posts::class)]
+
+    #[Groups(["User:read", "User:write", "Post:read"])]
+    #[ORM\OneToMany(mappedBy: 'postOwner', targetEntity: "Posts")]
     private Collection $posts;
 
     public function __construct()

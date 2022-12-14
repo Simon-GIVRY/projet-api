@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping\ManyToOne;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
+
 #[ORM\Entity(repositoryClass: PostsRepository::class)]
 #[ApiResource(
     operations: [
@@ -30,8 +31,15 @@ use Symfony\Component\Validator\Constraints\NotBlank;
     denormalizationContext:["groups" => ["Post:write"]]
 
 )]
-#[ApiFilter(SearchFilter::class, properties:["titles" => "partial", "description" => "partial"])]
+#[ApiFilter(SearchFilter::class, properties:[
+    "TextContent" => "partial", 
+    "tags" => "partial",
+    "postOwner" => "exact",
+    "postOwner.username" => "partial"
+    
+])]
 #[ApiFilter(BooleanFilter::class, properties:["isPublished"])]
+
 class Posts
 {
     #[ORM\Id]
@@ -40,23 +48,23 @@ class Posts
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["Post:read", "Post:write"])]
+    #[Groups(["Post:read", "Post:write", "User:read"])]
     private ?string $TextContent = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["Post:read", "Post:write"])]
+    #[Groups(["Post:read", "Post:write", "User:read"])]
     private ?string $urlLinkedMedia = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["Post:read", "Post:write"])]
+    #[Groups(["Post:read", "Post:write", "User:read"])]
     private ?string $tags = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups("Post:read")]
+    #[Groups(["Post:read", "User:read"])]
     private ?int $likes = null;
 
     #[ORM\Column]
-    #[Groups("Post:read")]
+    #[Groups(["Post:read", "User:read"])]
     private ?bool $isPublished = false;
 
     #[ORM\ManyToOne(targetEntity:"User", inversedBy: 'posts',cascade: ["persist"])]
