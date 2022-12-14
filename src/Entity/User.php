@@ -49,7 +49,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $username = null;
 
     #[ORM\Column]
-    #[Groups(["User:read", "Post:read", "Post:write"])]
+    #[Groups(["User:read", "Post:read"])]
     private array $roles = [];
 
     /**
