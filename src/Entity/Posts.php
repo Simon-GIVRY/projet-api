@@ -13,19 +13,24 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\PostsRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\ManyToOne;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\NotBlank;
-
+use Vich\UploaderBundle\Entity\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+// use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: PostsRepository::class)]
 #[ApiResource(
     operations: [
         new Get(),
         new GetCollection(),
-        new Post(),
+        new Post(
+            inputFormats: ['multipart' => ['multipart/form-data']], 
+            deserialize: false,),
         new Put(),
-        new Delete()
+        new Delete(),
+
     ],
     normalizationContext:["groups" => ["Post:read"]],
     denormalizationContext:["groups" => ["Post:write"]]
@@ -40,7 +45,8 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 ])]
 #[ApiFilter(BooleanFilter::class, properties:["isPublished"])]
 
-class Posts
+#[Vich\Uploadable]
+class Posts extends AbstractController
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -72,6 +78,23 @@ class Posts
     #[NotBlank()]
     #[Groups(["Post:read", "Post:write", "User:read"])]
     private ?User $postOwner = null;
+
+    #[Vich\UploadableField(mapping: 'post_image', fileNameProperty: 'imageName', size: 'imageSize')]
+    #[Groups(["Post:read", "Post:write"])]
+    private ?File $imageFile = null;
+
+    #[ORM\Column(type: 'string')]
+    private ?string $imageName = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups("Post:read")]
+    public ?string $filePath = null;
+
+    #[ORM\Column(type: 'integer')]
+    private ?int $imageSize = null;
+
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function getId(): ?int
     {
@@ -150,4 +173,41 @@ class Posts
 
         return $this;
     }
+
+    public function setImageFile(?File $imageFile = null): void
+    {
+        $this->imageFile = $imageFile;
+
+        if (null !== $imageFile) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getImageFile(): ?File
+    {
+        return $this->imageFile;
+    }
+
+    public function setImageName(?string $imageName): void
+    {
+        $this->imageName = $imageName;
+    }
+
+    public function getImageName(): ?string
+    {
+        return $this->imageName;
+    }
+
+    public function setImageSize(?int $imageSize): void
+    {
+        $this->imageSize = $imageSize;
+    }
+
+    public function getImageSize(): ?int
+    {
+        return $this->imageSize;
+    }
+
+
+
 }
