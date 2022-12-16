@@ -11,14 +11,16 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use App\Controller\PostImageController;
 use App\Repository\PostsRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Vich\UploaderBundle\Entity\File;
+// use Vich\UploaderBundle\Entity\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
-// use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\File;
+// use ApiPlatform\Action\PlaceholderAction;
 
 #[ORM\Entity(repositoryClass: PostsRepository::class)]
 #[ApiResource(
@@ -27,7 +29,9 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new GetCollection(),
         new Post(
             inputFormats: ['multipart' => ['multipart/form-data']], 
-            deserialize: false,),
+            deserialize: false,
+            controller: PostImageController::class
+           ),
         new Put(),
         new Delete(),
 
